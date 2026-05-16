@@ -2,8 +2,8 @@ import sys
 import threading
 from pathlib import Path
 from flask import Flask, jsonify, Response
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtGui import QColor, QPalette
+from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QColor, QPalette
 
 from core.state import state, load_settings, get_base_dir
 from ui.widgets import WinCounter
@@ -62,4 +62,4 @@ if __name__ == "__main__":
     app._main_win = win
     win.resize(900, 780)
     win.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

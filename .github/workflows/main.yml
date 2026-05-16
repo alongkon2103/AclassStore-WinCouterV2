@@ -1,4 +1,4 @@
-name: Build EXE
+name: Build and Release EXE
 
 on:
   push:
@@ -7,11 +7,10 @@ on:
       - master
     tags:
       - 'v*'
-  pull_request:
-    branches:
-      - main
-      - master
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -47,6 +46,9 @@ jobs:
             --add-data "web;web" `
             --add-data "settings.json;." `
             --add-data "settings_v5.json;." `
+            --hidden-import "PySide6.QtCore" `
+            --hidden-import "PySide6.QtGui" `
+            --hidden-import "PySide6.QtWidgets" `
             --hidden-import "core.hotkeys" `
             --hidden-import "core.state" `
             --hidden-import "ui.styles" `
@@ -65,31 +67,26 @@ jobs:
           }
         shell: pwsh
 
-      # ── 6. Upload artifact (every build) ─────────────────────────
-      - name: Upload EXE artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: AclassStore-WinCouterV2
-          path: dist/AclassStore-WinCouterV2.exe
-          retention-days: 30
-
-      # ── 7. Create GitHub Release (only on tag push) ───────────────
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+      # ── 6. Create GitHub Release ──────────────────────────────────
+      - name: Create or Update Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "AclassStore-WinCouterV2 ${{ github.ref_name }}"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'Latest Build (Auto-generated)' }}
           body: |
-            ## 🚀 AclassStore-WinCouterV2 ${{ github.ref_name }}
-
-            ### การติดตั้ง
-            1. ดาวน์โหลด `AclassStore-WinCouterV2.exe`
-            2. รันไฟล์โดยตรง (ไม่ต้องติดตั้ง)
-
-            ### การเปลี่ยนแปลง
-            ดูรายละเอียดใน [Commits](${{ github.server_url }}/${{ github.repository }}/commits/${{ github.ref_name }})
+            ## 🚀 AclassStore-WinCouterV2
+            
+            ไฟล์ EXE นี้ถูกสร้างขึ้นโดยอัตโนมัติจากระบบ CI/CD
+            
+            ### การติดตั้งและใช้งาน
+            1. ดาวน์โหลดไฟล์ `AclassStore-WinCouterV2.exe` ด้านล่าง
+            2. รันไฟล์เพื่อเริ่มใช้งานได้ทันที
+            
+            ---
+            *สร้างเมื่อ: ${{ github.event.head_commit.timestamp || github.run_id }}*
+            *Commit: ${{ github.sha }}*
           files: dist/AclassStore-WinCouterV2.exe
           draft: false
-          prerelease: false
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
